@@ -19,13 +19,12 @@
     Special Implementation is done for other Regions.
 """
 
-import pyotherside
-import threading
 from datetime import datetime
 from datetime import timezone
 from urllib.request import urlopen
 import pickle
 from pathlib import Path
+import jsons
 import copy
 
 def addParentInfo(et):
@@ -368,74 +367,7 @@ def issueReport(regionID, local, path, fromCache=False):
         if "DE" in local.upper():
             url = "https://conselharan2.cyberneticos.net/albina_files_local/latest/de.xml"
             provider = "Die dargestellten Informationen werden über eine API auf https://lauegi.conselharan.org/ abgefragt. Diese wird bereitgestellt von Conselh Generau d'Aran (https://lauegi.conselharan.org/)."
-
-    cached = True
-    if not fromCache:
-        try:
-            reports.extend(getReports(url))
-        except:
-            matchingReport = fetchCachedReport(regionID, local, path)
-
-
-        Path(path + "/reports/").mkdir(parents=True, exist_ok=True)
-
-        for report in reports:
-            for currentRegionID in report.validRegions:
-                with open(path + '/reports/'+currentRegionID+local+'.pkl', 'wb') as f:
-                    pickle.dump(report, f, pickle.HIGHEST_PROTOCOL)
-            for ID in report.validRegions:
-                if ID == regionID:
-                  matchingReport = report
-                  cached = False
-    else:
-         matchingReport = fetchCachedReport(regionID, local, path)
-
-    try:
-        matchingReport
-    except NameError:
-        pyotherside.send('dangerLevel', "Problem resolving Region")
-        pyotherside.send('provider', "Couldn't find the RegionID in the Report. Probably it is not served at the moment.")
-
-        pyotherside.send('finished', False)
-    else:
-        dangerLevel = 0
-        try:
-            for elem in matchingReport.dangerMain:
-                if elem['mainValue'] > dangerLevel:
-                    dangerLevel = elem['mainValue']
-        except:
-            pyotherside.send('finished', False)
-        pyotherside.send('dangerLevel', dangerLevel)
-        pyotherside.send('dangerLevel_h', matchingReport.dangerMain[0]['mainValue'])
-        if (len(matchingReport.dangerMain) > 1):
-            pyotherside.send('dangerLevel_l', matchingReport.dangerMain[1]['mainValue'])
-            pyotherside.send('dangerLevel_alti', matchingReport.dangerMain[0]['validElev'])
-        else:
-            pyotherside.send('dangerLevel_l', matchingReport.dangerMain[0]['mainValue'])
-        pyotherside.send('highlights', matchingReport.activityHighl)
-        pyotherside.send('comment',matchingReport.activityCom.replace("&nbsp;", " "))
-        pyotherside.send('structure', matchingReport.snowStrucCom.replace("&nbsp;", " "))
-        pyotherside.send('tendency', matchingReport.tendencyCom.replace("&nbsp;", " "))
-        pyotherside.send('repDate', matchingReport.repDate)
-        pyotherside.send('validFrom', matchingReport.timeBegin)
-        pyotherside.send('validTo', matchingReport.timeEnd)
-        pyotherside.send('numberOfDPatterns', len(matchingReport.problemList))
-        pyotherside.send('dPatterns', str(matchingReport.problemList).replace("'", '"'))
-        pyotherside.send('provider', provider)
-
-        pyotherside.send('cached', cached)
-        pyotherside.send('finished', True)
-
-class Downloader:
-    def __init__(self):
-        self.bgthread = threading.Thread()
-        self.bgthread.start()
-
-    def download(self, regionID, local, path):
-        if self.bgthread.is_alive():
-            return
-        self.bgthread = threading.Thread(target=issueReport(regionID, local, path))
-        self.bgthread.start()
+    return getReports(url)
 
     def cached(self, regionID, local, path):
         issueReport(regionID, local, path, fromCache=True)
@@ -454,4 +386,10 @@ class avaReport:
         self.snowStrucCom = "none"      # String comment on snowpack structure
         self.tendencyCom = "none"       # String comment on tendency
 
-downloader = Downloader()
+if __name__ == "__main__":
+    regions = ["AT-02", "AT-03", "AT-04", "AT-05", "AT-06", "AT-07", "AT8", "BY"]
+    reports: list[avaReport] = [report for region in regions for report in issueReport(region, "DE")]
+    for report in reports:
+        print(report.timeBegin, report.timeEnd, sorted(list(set(report.validRegions))))
+    with open('reports.json', mode='w', encoding='utf-8') as f:
+        f.write(jsons.dumps(reports))
