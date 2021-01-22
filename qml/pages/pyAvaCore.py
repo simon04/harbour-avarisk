@@ -25,7 +25,17 @@ from urllib.request import urlopen
 import pickle
 from pathlib import Path
 import json
+import logging
+import logging.handlers
 import copy
+
+logging.basicConfig(
+    format='[%(asctime)s] {%(module)s:%(lineno)d} %(levelname)s - %(message)s',
+    level=logging.INFO,
+    handlers=[
+        logging.handlers.TimedRotatingFileHandler(filename=f'logs/pyAvaCore.log', when='midnight'),
+        logging.StreamHandler(),
+    ])
 
 def addParentInfo(et):
     for child in et:
@@ -276,6 +286,7 @@ def parseXMLBavaria(root):
     return reports
 
 def getReports(url):
+    logging.info('Fetching %s', url)
     root = getXmlAsElemT(url)
     if "VORARLBERG" in url.upper():
         reports = parseXMLVorarlberg(root)
@@ -400,4 +411,5 @@ if __name__ == "__main__":
     for report in reports:
         print(report.timeBegin, report.timeEnd, sorted(list(set(report.validRegions))))
     with open('reports.json', mode='w', encoding='utf-8') as f:
+        logging.info('Writing %s', f.name)
         json.dump(reports, fp=f, default=dumper, indent=2)
