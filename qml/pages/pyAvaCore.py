@@ -24,7 +24,7 @@ from datetime import timezone
 from urllib.request import urlopen
 import pickle
 from pathlib import Path
-import jsons
+import json
 import copy
 
 def addParentInfo(et):
@@ -386,10 +386,18 @@ class avaReport:
         self.snowStrucCom = "none"      # String comment on snowpack structure
         self.tendencyCom = "none"       # String comment on tendency
 
+def dumper(obj):
+    if type(obj) is datetime:
+        return obj.isoformat()
+    try:
+        return obj.toJSON()
+    except:
+        return obj.__dict__
+
 if __name__ == "__main__":
     regions = ["AT-02", "AT-03", "AT-04", "AT-05", "AT-06", "AT-07", "AT8", "BY"]
     reports: list[avaReport] = [report for region in regions for report in issueReport(region, "DE")]
     for report in reports:
         print(report.timeBegin, report.timeEnd, sorted(list(set(report.validRegions))))
     with open('reports.json', mode='w', encoding='utf-8') as f:
-        f.write(jsons.dumps(reports))
+        json.dump(reports, fp=f, default=dumper, indent=2)
