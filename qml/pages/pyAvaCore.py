@@ -421,10 +421,20 @@ def dumper(obj):
         return obj.__dict__
 
 if __name__ == "__main__":
-    regions = ["AT-02", "AT-03", "AT-04", "AT-05", "AT-06", "AT-07", "AT8", "BY"]
+    regions = ["AT-02", "AT-03", "AT-04", "AT-05", "AT-06", "AT8", "BY"]
     reports: list[avaReport] = [report for region in regions for report in issueReport(region, "DE")]
     for report in reports:
-        print(report.timeBegin, report.timeEnd, sorted(list(set(report.validRegions))))
+        report.activityHighl = None
+        report.activityCom = None
+        report.snowStrucCom = None
+        report.tendencyCom = None
+        for danger in report.dangerMain:
+            if danger.validElev in ['', '-', 'ElevationRange_Keine H\u00f6hengrenzeHi']:
+                danger.validElev = None
+        for problem in report.problemList:
+            if problem.validElev in ['', '-']:
+                problem.validElev = None
+            problem.aspect = [a.upper().replace('ASPECTRANGE_', '') for a in problem.aspect]
     with open('reports.json', mode='w', encoding='utf-8') as f:
         logging.info('Writing %s', f.name)
         json.dump(reports, fp=f, default=dumper, indent=2)
