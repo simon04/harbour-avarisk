@@ -100,7 +100,7 @@ def parseXML(root):
                 validElevR = "-"
                 for validElevation in DangerRating.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}validElevation'):
                     validElevR = validElevation.attrib.get('{http://www.w3.org/1999/xlink}href')
-                report.dangerMain.append({'mainValue':mainValueR,'validElev':validElevR})
+                report.dangerMain.append(DangerMain(mainValueR, validElevR))
             for DangerPattern in observations.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}DangerPattern'):
                 for DangerPatternType in DangerPattern.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}type'):
                     report.dangerPattern.append(DangerPatternType.text)
@@ -116,7 +116,7 @@ def parseXML(root):
                 for validElevation in AvProblem.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}validElevation'):
                     validElevR = validElevation.get('{http://www.w3.org/1999/xlink}href')
                 i = i+1
-                report.problemList.append({'type':typeR,'aspect':aspect,'validElev':validElevR})
+                report.problemList.append(Problem(typeR, aspect, validElevR))
             for avActivityHighlights in observations.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}avActivityHighlights'):
                 report.activityHighl = avActivityHighlights.text
             for avActivityComment in observations.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}avActivityComment'):
@@ -169,7 +169,7 @@ def parseXMLVorarlberg(root):
                         for endPosition in validElevation.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}endPosition'):
                             validElev = "ElevationRange_" + endPosition.text + "Lw"
                     i = i+1
-                    report.problemList.append({'type':typeR,'aspect':aspect,'validElev':validElev})
+                    report.problemList.append(Problem(typeR, aspect, validElev))
 
 
     for i in range(numberOfRegions+1):
@@ -198,7 +198,7 @@ def parseXMLVorarlberg(root):
                             validElev = "ElevationRange_" + beginPosition.text + "Hi"
                         for endPosition in validElevation.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}endPosition'):
                             validElev = "ElevationRange_" + endPosition.text + "Lw"
-                    reports[regionID-1].dangerMain.append({'mainValue':mainValue,'validElev':validElev})
+                    reports[regionID-1].dangerMain.append(DangerMain(mainValue, validElev))
     return reports
 
 
@@ -238,7 +238,7 @@ def parseXMLBavaria(root):
                 for endPosition in validElevation.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}endPosition'):
                     validElev = "ElevationRange_" + endPosition.text + "Lw"
             i = i+1
-            report.problemList.append({'type':type,'aspect':aspect,'validElev':validElev})
+            report.problemList.append(Problem(type, aspect, validElev))
 
     for i in range(numberOfRegions+1):
         reports.append(copy.deepcopy(report))
@@ -281,7 +281,7 @@ def parseXMLBavaria(root):
                     validElev = "ElevationRange_" + beginPosition.text + "Hi"
                 for endPosition in validElevation.iter(tag='{http://caaml.org/Schemas/V5.0/Profiles/BulletinEAWS}endPosition'):
                     validElev = "ElevationRange_" + endPosition.text + "Lw"
-            reports[regionID].dangerMain.append({'mainValue':mainValue,'validElev':validElev})
+            reports[regionID].dangerMain.append(DangerMain(mainValue, validElev))
 
     return reports
 
@@ -360,7 +360,7 @@ def issueReport(regionID, local, path, fromCache=False):
         url = "https://warndienste.cnv.at/dibos/lawine_en/avalanche_bulletin_vorarlberg_en.xml"
         provider = "The displayed information is provided by an open data API on https://warndienste.cnv.at by: Landeswarnzentrale Vorarlberg - http://www.vorarlberg.at/lawine"
         if "DE" in local.upper():
-            url = "http://warndienste.cnv.at/dibos/lawine/avalanche_bulletin_vorarlberg_de.xml"
+            url = "https://warndienste.cnv.at/dibos/lawine/avalanche_bulletin_vorarlberg_de.xml"
             provider = "Die dargestellten Informationen werden über eine API auf https://warndienste.cnv.at abgefragt. Diese wird bereitgestellt von der Landeswarnzentrale Vorarlberg - http://www.vorarlberg.at/lawine"
 
     #Bavaria
@@ -380,8 +380,23 @@ def issueReport(regionID, local, path, fromCache=False):
             provider = "Die dargestellten Informationen werden über eine API auf https://lauegi.conselharan.org/ abgefragt. Diese wird bereitgestellt von Conselh Generau d'Aran (https://lauegi.conselharan.org/)."
     return getReports(url)
 
-    def cached(self, regionID, local, path):
-        issueReport(regionID, local, path, fromCache=True)
+class DangerMain:
+    mainValue: int
+    validElev: str
+
+    def __init__(self, mainValue: int, validElev: str):
+        self.mainValue = mainValue
+        self.validElev = validElev
+
+class Problem:
+    type: str
+    aspect: list
+    validElev: str
+
+    def __init__(self, type: str, aspect: list, validElev: str) -> None:
+        self.type = type
+        self.aspect = aspect
+        self.validElev = validElev
 
 class avaReport:
     def __init__(self):
