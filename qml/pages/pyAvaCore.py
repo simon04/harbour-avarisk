@@ -28,6 +28,7 @@ import json
 import logging
 import logging.handlers
 import copy
+import re
 
 logging.basicConfig(
     format='[%(asctime)s] {%(module)s:%(lineno)d} %(levelname)s - %(message)s',
@@ -401,6 +402,14 @@ class avaReport:
         self.snowStrucCom = "none"      # String comment on snowpack structure
         self.tendencyCom = "none"       # String comment on tendency
 
+def clean_elevation(elev: str):
+    if elev in ['', '-', 'ElevationRange_Keine H\u00f6hengrenzeHi']:
+        return None
+    elev = re.sub(r'ElevationRange_(.+)Hi', r'>\1', elev)
+    elev = re.sub(r'ElevationRange_(.+)(Lo|Lw)', r'<\1', elev)
+    elev = elev.replace('Forestline', 'Treeline')
+    return elev
+
 def dumper(obj):
     if type(obj) is datetime:
         return obj.isoformat()
@@ -418,11 +427,9 @@ if __name__ == "__main__":
         report.snowStrucCom = None
         report.tendencyCom = None
         for danger in report.dangerMain:
-            if danger.validElev in ['', '-', 'ElevationRange_Keine H\u00f6hengrenzeHi']:
-                danger.validElev = None
+            danger.validElev = clean_elevation(danger.validElev)
         for problem in report.problemList:
-            if problem.validElev in ['', '-']:
-                problem.validElev = None
+            problem.validElev = clean_elevation(problem.validElev)
             problem.aspect = [a.upper().replace('ASPECTRANGE_', '') for a in problem.aspect]
     with open('reports.json', mode='w', encoding='utf-8') as f:
         logging.info('Writing %s', f.name)
