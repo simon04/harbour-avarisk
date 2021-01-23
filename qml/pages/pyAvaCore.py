@@ -426,6 +426,7 @@ if __name__ == "__main__":
         report.activityCom = None
         report.snowStrucCom = None
         report.tendencyCom = None
+        report.validRegions = [r.replace('AT8R', 'AT-08-0') for r in report.validRegions]
         for danger in report.dangerMain:
             danger.validElev = clean_elevation(danger.validElev)
         for problem in report.problemList:
