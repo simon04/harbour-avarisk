@@ -299,7 +299,18 @@ def getReports(url):
 
 
 def tryParseDateTime(inStr):
-    return datetime.fromisoformat(inStr)
+    try:
+        r_dateTime = datetime.strptime(inStr, '%Y-%m-%dT%XZ')
+        #print(r_dateTime.isoformat())
+    except:
+        try:
+            r_dateTime = datetime.strptime(inStr[:19], '%Y-%m-%dT%X') # 2019-04-30T15:55:29+01:00
+            #print(r_dateTime.isoformat())
+        except:
+            # print('some Error in try dateTime') (Normal vor Vorarlberg)
+            r_dateTime = datetime.now()
+
+    return r_dateTime
 
 
 def issueReport(regionID, local, path, fromCache=False):
