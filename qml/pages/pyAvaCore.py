@@ -19,7 +19,9 @@
     Special Implementation is done for other Regions.
 """
 
+from datetime import date
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 from urllib.request import urlopen
 import pickle
@@ -403,6 +405,7 @@ class avaReport:
     def __init__(self):
         self.validRegions = []          # list of Regions
         self.repDate = ""               # Date of Report
+        self.validityDate = None
         self.timeBegin = ""             # valid Ttime start
         self.timeEnd = ""               # valid time end
         self.dangerMain = []            # danger Value and elev
@@ -434,6 +437,11 @@ if __name__ == "__main__":
     reports = [report for region in regions for report in issueReport(region, "DE")]
     report: avaReport
     for report in reports:
+        if type(report.timeBegin) is datetime:
+            report.validityDate = report.timeBegin
+            if report.validityDate.hour > 15:
+                report.validityDate = report.validityDate + timedelta(days=1)
+            report.validityDate = report.validityDate.date().isoformat()
         report.activityHighl = None
         report.activityCom = None
         report.snowStrucCom = None
