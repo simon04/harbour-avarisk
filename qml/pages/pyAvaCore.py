@@ -31,6 +31,7 @@ import logging
 import logging.handlers
 import copy
 import re
+import sys
 
 logging.basicConfig(
     format='[%(asctime)s] {%(module)s:%(lineno)d} %(levelname)s - %(message)s',
@@ -452,6 +453,7 @@ if __name__ == "__main__":
         for problem in report.problemList:
             problem.validElev = clean_elevation(problem.validElev)
             problem.aspect = [a.upper().replace('ASPECTRANGE_', '') for a in problem.aspect]
-    with open('reports.json', mode='w', encoding='utf-8') as f:
+    filename = sys.argv[1] if len(sys.argv) > 1 else 'reports.json'
+    with open(filename, mode='w', encoding='utf-8') as f:
         logging.info('Writing %s', f.name)
         json.dump(reports, fp=f, default=dumper, indent=2)
