@@ -435,7 +435,7 @@ def dumper(obj):
 
 if __name__ == "__main__":
     regions = ["AT-02", "AT-03", "AT-04", "AT-05", "AT-06", "AT8", "BY"]
-    reports = [report for region in regions for report in issueReport(region, "DE")]
+    reports = [report for region in regions for report in issueReport(region, "", None)]
     report: avaReport
     for report in reports:
         if type(report.timeBegin) is datetime:
