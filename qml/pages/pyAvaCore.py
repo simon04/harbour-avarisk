@@ -316,73 +316,43 @@ def tryParseDateTime(inStr):
     return r_dateTime
 
 
-def issueReport(regionID, local, path, fromCache=False):
-    url = "https://api.avalanche.report/albina/api/bulletins"
-    reports = []
-    provider = ""
+def getReportUrl(regionID):
     # Euregio-Region Tirol, Südtirol, Trentino
     if ("AT-07" in regionID) or ("IT-32-BZ" in regionID) or ("IT-32-TN" in regionID):
-        url = "https://api.avalanche.report/albina/api/bulletins"
-        provider = "The displayed information is provided by an open data API on https://avalanche.report by: Avalanche Warning Service Tirol, Avalanche Warning Service Südtirol, Avalanche Warning Service Trentino."
-        if "DE" in local.upper():
-            url += "?lang=de"
-            provider = "Die dargestellten Informationen werden über eine API auf https://avalanche.report abgefragt. Diese wird bereitgestellt von: Avalanche Warning Service Tirol, Avalanche Warning Service Südtirol, Avalanche Warning Service Trentino."
+        return "https://api.avalanche.report/albina/api/bulletins"
 
     # Kärnten
     if "AT-02" in regionID:
-        url = "https://www.avalanche-warnings.eu/public/kaernten/caaml"
-        provider = "Die dargestellten Informationen werden über eine API auf https://www.avalanche-warnings.eu abgefragt. Diese wird bereitgestellt vom: Lawinenwarndienst Kärnten (https://lawinenwarndienst.ktn.gv.at)."
+        return "https://www.avalanche-warnings.eu/public/kaernten/caaml"
 
     # Salzburg
     if "AT-05" in regionID:
-        url = "https://www.avalanche-warnings.eu/public/salzburg/caaml/en"
-        provider = "Die dargestellten Informationen werden über eine API auf https://www.avalanche-warnings.eu abgefragt. Diese wird bereitgestellt vom: Lawinenwarndienst Salzburg (https://lawine.salzburg.at)."
-        if "DE" in local.upper():
-            url = "https://www.avalanche-warnings.eu/public/salzburg/caaml"
-            provider = "The displayed information is provided by an open data API on https://www.avalanche-warnings.eu by: Avalanche Warning Service Salzburg (https://lawine.salzburg.at)."
+        return "https://www.avalanche-warnings.eu/public/salzburg/caaml/en"
 
     # Steiermark
     if "AT-06" in regionID:
-        url = "https://www.avalanche-warnings.eu/public/steiermark/caaml/en"
-        provider = "The displayed information is provided by an open data API on https://www.avalanche-warnings.eu by: Avalanche Warning Service Steiermark (https://www.lawine-steiermark.at)."
-        if "DE" in local.upper():
-            url = "https://www.avalanche-warnings.eu/public/steiermark/caaml"
-            provider = "Die dargestellten Informationen werden über eine API auf https://www.avalanche-warnings.eu abgefragt. Diese wird bereitgestellt vom: Lawinenwarndienst Steiermark (https://www.lawine-steiermark.at)."
+        return "https://www.avalanche-warnings.eu/public/steiermark/caaml/en"
 
     # Oberösterreich
     if "AT-04" in regionID:
-        url = "https://www.avalanche-warnings.eu/public/oberoesterreich/caaml"
-        provider = "Die dargestellten Informationen werden über eine API auf https://www.avalanche-warnings.eu abgefragt. Diese wird bereitgestellt vom: Lawinenwarndienst Oberösterreich (https://www.land-oberoesterreich.gv.at/lawinenwarndienst.htm)."
+        return "https://www.avalanche-warnings.eu/public/oberoesterreich/caaml"
 
     # Niederösterreich - Noch nicht angelegt
     if "AT-03" in regionID:
-        url = "https://www.avalanche-warnings.eu/public/niederoesterreich/caaml"
-        provider = "Die dargestellten Informationen werden über eine API auf https://www.avalanche-warnings.eu abgefragt. Diese wird bereitgestellt vom: Lawinenwarndienst Niederösterreich (https://www.lawinenwarndienst-niederoesterreich.at)."
+        return "https://www.avalanche-warnings.eu/public/niederoesterreich/caaml"
 
     #Vorarlberg
-    if regionID.startswith("AT8"):
-        url = "https://warndienste.cnv.at/dibos/lawine_en/avalanche_bulletin_vorarlberg_en.xml"
-        provider = "The displayed information is provided by an open data API on https://warndienste.cnv.at by: Landeswarnzentrale Vorarlberg - http://www.vorarlberg.at/lawine"
-        if "DE" in local.upper():
-            url = "https://warndienste.cnv.at/dibos/lawine/avalanche_bulletin_vorarlberg_de.xml"
-            provider = "Die dargestellten Informationen werden über eine API auf https://warndienste.cnv.at abgefragt. Diese wird bereitgestellt von der Landeswarnzentrale Vorarlberg - http://www.vorarlberg.at/lawine"
+    if regionID.startswith("AT-08"):
+        return "https://warndienste.cnv.at/dibos/lawine_en/avalanche_bulletin_vorarlberg_en.xml"
 
     #Bavaria
     if regionID.startswith("BY"):
-        url = "https://www.lawinenwarndienst-bayern.de/download/lagebericht/caaml_en.xml"
-        provider = "The displayed ihe displayed information is provided by an open data API on https://www.lawinenwarndienst-bayern.de/ by: Avalanche warning centre at the Bavarian State Office for the Environment - https://www.lawinenwarndienst-bayern.de/"
-        if "DE" in local.upper():
-            url = "https://www.lawinenwarndienst-bayern.de/download/lagebericht/caaml.xml"
-            provider = "Die dargestellten Informationen werden über eine API auf https://www.lawinenwarndienst-bayern.de abgefragt. Diese wird bereitgestellt von der Lawinenwarnzentrale Bayern (https://www.lawinenwarndienst-bayern.de)."
+        return "https://www.lawinenwarndienst-bayern.de/download/lagebericht/caaml_en.xml"
 
     #Val d'Aran
     if regionID.startswith("ES-CT-L"):
-        url = "https://conselharan2.cyberneticos.net/albina_files_local/latest/en.xml"
-        provider = "The displayed ihe displayed information is provided by an open data API on https://lauegi.conselharan.org/ by: Conselh Generau d'Aran - https://lauegi.conselharan.org/"
-        if "DE" in local.upper():
-            url = "https://conselharan2.cyberneticos.net/albina_files_local/latest/de.xml"
-            provider = "Die dargestellten Informationen werden über eine API auf https://lauegi.conselharan.org/ abgefragt. Diese wird bereitgestellt von Conselh Generau d'Aran (https://lauegi.conselharan.org/)."
-    return getReports(url)
+        return "https://conselharan2.cyberneticos.net/albina_files_local/latest/en.xml"
+    return None
 
 class DangerMain:
     mainValue: int
@@ -406,7 +376,6 @@ class avaReport:
     def __init__(self):
         self.validRegions = []          # list of Regions
         self.repDate = ""               # Date of Report
-        self.validityDate = None
         self.timeBegin = ""             # valid Ttime start
         self.timeEnd = ""               # valid time end
         self.dangerMain = []            # danger Value and elev
@@ -433,16 +402,16 @@ def dumper(obj):
     except:
         return obj.__dict__
 
-if __name__ == "__main__":
-    regions = ["AT-02", "AT-03", "AT-04", "AT-05", "AT-06", "AT8", "BY"]
-    reports = [report for region in regions for report in issueReport(region, "", None)]
+def download_region(regionID):
+    url = getReportUrl(regionID)
+    reports = getReports(url)
     report: avaReport
     for report in reports:
         if type(report.timeBegin) is datetime:
-            report.validityDate = report.timeBegin
-            if report.validityDate.hour > 15:
-                report.validityDate = report.validityDate + timedelta(days=1)
-            report.validityDate = report.validityDate.date().isoformat()
+            validityDate = report.timeBegin
+            if validityDate.hour > 15:
+                validityDate = validityDate + timedelta(days=1)
+            validityDate = validityDate.date().isoformat()
         report.activityHighl = None
         report.activityCom = None
         report.snowStrucCom = None
@@ -453,7 +422,19 @@ if __name__ == "__main__":
         for problem in report.problemList:
             problem.validElev = clean_elevation(problem.validElev)
             problem.aspect = [a.upper().replace('ASPECTRANGE_', '') for a in problem.aspect]
-    filename = sys.argv[1] if len(sys.argv) > 1 else 'reports.json'
-    with open(filename, mode='w', encoding='utf-8') as f:
+
+    directory = Path(sys.argv[1] if len(sys.argv) > 1 else '.')
+    with urlopen(url) as http, open(f'{directory}/{validityDate}-{regionID}.xml', mode='wb') as f:
+        logging.info('Writing %s to %s', url, f.name)
+        f.write(http.read())
+    with open(f'{directory}/{validityDate}-{regionID}.json', mode='w', encoding='utf-8') as f:
         logging.info('Writing %s', f.name)
         json.dump(reports, fp=f, default=dumper, indent=2)
+
+if __name__ == "__main__":
+    regions = ["AT-02", "AT-03", "AT-04", "AT-05", "AT-06", "AT-08", "BY"]
+    for regionID in regions:
+        try:
+            download_region(regionID)
+        except Exception as e:
+            logging.error('Failed to download %s', regionID, exc_info=e)
